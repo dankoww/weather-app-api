@@ -1,60 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/relativeLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#333"
     tools:context=".MainActivity">
 
     <TextView
+        android:id="@+id/location_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="23dp"
+        android:textAlignment="center"
+        android:textColor="#ccc"
+
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/logo2" />
+
+    <TextView
         android:id="@+id/logo"
         android:layout_width="match_parent"
 
         android:layout_height="wrap_content"
+        android:layout_marginTop="30sp"
         android:text="Pogoda w twoim mieście"
         android:textAlignment="center"
         android:textColor="#fff"
         android:textSize="30sp"
-        android:layout_marginTop="30sp"
-        />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
         android:id="@+id/user_field"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/logo"
         android:layout_marginHorizontal="50sp"
-        android:layout_marginTop="100sp"
+        android:layout_marginTop="24dp"
         android:backgroundTint="@color/teal_200"
         android:ems="10"
         android:hint="Podaj miasto"
         android:inputType="textPersonName"
-        android:textColorHint="#ccc" />
+        android:textColorHint="#ccc"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/logo" />
 
     <Button
         android:id="@+id/main_btn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/user_field"
         android:layout_marginHorizontal="130sp"
         android:layout_marginTop="20sp"
 
-        android:text="Wyszukaj">
+        android:text="Wyszukaj"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/user_field">
 
 
     </Button>
+
     <TextView
         android:id="@+id/result_info"
         android:layout_width="match_parent"
-android:layout_below="@+id/main_btn"
         android:layout_height="wrap_content"
+        android:layout_marginTop="30sp"
         android:textAlignment="center"
         android:textColor="#ccc"
         android:textSize="25sp"
-        android:layout_marginTop="30sp"
 
-        />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/main_btn" />
+
+    <TextView
+        android:id="@+id/logo2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="9dp"
+        android:text="Twoja Lokalizacja"
+        android:textColor="#FFFFFF"
+        android:textSize="24sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/result_info" />
 
 
-</RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

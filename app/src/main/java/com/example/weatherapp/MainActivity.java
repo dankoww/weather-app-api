@@ -1,8 +1,19 @@
 package com.example.weatherapp;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
@@ -21,12 +32,17 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
     private EditText user_field;
     private Button main_btn;
     private TextView result_info;
+    TextView location_info;
+    LocationManager locationManager;
+    LocationListener locationListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +52,33 @@ public class MainActivity extends AppCompatActivity {
         user_field = findViewById(R.id.user_field);
         main_btn = findViewById(R.id.main_btn);
         result_info = findViewById(R.id.result_info);
+        location_info = findViewById(R.id.location_info);
+
+
+        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(@NonNull Location location) {
+                updateLocationInfo(location);
+            }
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras){
+
+            }
+        };
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this,
+                    new String[] {Manifest.permission.ACCESS_FINE_LOCATION},1);
+        }else{
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0,locationListener);
+            Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+            if(lastKnownLocation == null){
+                updateLocationInfo(lastKnownLocation);
+            }
+        }
+
 
         main_btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -52,6 +95,53 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            startListening();
+        }
+    }
+
+    public void updateLocationInfo(Location location){
+        //Log.i("Lokalizacja", location.toString());
+        String Position = ("Szerokość geograficzna: " + "\n" +  location.getLatitude() + "\n" + "Długość geograficzna: " + "\n" + location.getLongitude());
+
+        String info = "brakDanych";
+        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+        try {
+            List<Address> addressList = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(),1);
+            if(addressList != null && addressList.size() > 0) {
+                info = "informacje: \n";
+                if(addressList.get(0).getThoroughfare() != null){
+                    info += "Ulica:" + '\n' +addressList.get(0).getThoroughfare() +'\n';
+                }
+                if(addressList.get(0).getLocality() != null){
+                    info += "Rejon:" + '\n' +addressList.get(0).getLocality() +'\n';
+                }
+                if(addressList.get(0).getPostalCode() != null){
+                    info += "Kod pocztowy:" + '\n' + addressList.get(0).getPostalCode() +'\n';
+                }
+                if(addressList.get(0).getAdminArea() != null){
+                    info += "Obszar:" + '\n' + addressList.get(0).getAdminArea() +'\n';
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        location_info.setText(Position + "\n" + info );
+    }
+
+    public void startListening(){
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ) {
+            return;
+        }
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+    }
+
+
 
     @SuppressLint("StaticFieldLeak")
     private class GetURLData extends AsyncTask<String, String, String> {
