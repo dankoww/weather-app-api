@@ -16,11 +16,21 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -44,6 +54,18 @@ public class MainActivity extends AppCompatActivity {
     LocationManager locationManager;
     LocationListener locationListener;
 
+    // creating variable for button
+    private Button submitLocationBtn;
+    private Button getLocationBtn;
+
+    // creating a strings for storing
+    // our values from edittext fields.
+    private String locationName, locationPosition, locationInfo;
+
+    // creating a variable
+    // for firebasefirestore.
+    private FirebaseFirestore db;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,6 +75,13 @@ public class MainActivity extends AppCompatActivity {
         main_btn = findViewById(R.id.main_btn);
         result_info = findViewById(R.id.result_info);
         location_info = findViewById(R.id.location_info);
+        // getting our instance
+        // from Firebase Firestore.
+        db = FirebaseFirestore.getInstance();
+
+        // initializing our edittext and buttons
+        submitLocationBtn = findViewById(R.id.Save);
+        getLocationBtn = findViewById(R.id.Load);
 
 
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
@@ -94,6 +123,52 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+
+        // adding on click listener for button
+        submitLocationBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+
+                // validating the text fields if empty or not.
+                if (TextUtils.isEmpty(locationName)) {
+                    Toast.makeText(MainActivity.this, "Location name not found", Toast.LENGTH_SHORT).show();
+                } else if (TextUtils.isEmpty(locationInfo)) {
+                    Toast.makeText(MainActivity.this, "Location info not found", Toast.LENGTH_SHORT).show();
+                } else if (TextUtils.isEmpty(locationPosition)) {
+                    Toast.makeText(MainActivity.this, "Location coordinates not found", Toast.LENGTH_SHORT).show();
+                } else {
+                    // calling method to add data to Firebase Firestore.
+                    addDataToFirestore(locationName, locationInfo, locationPosition);
+                }
+            }
+        });
+
+
+
+        getLocationBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                db.collection("Locations").document("tjafKNG4l2WU8NO4WeCj").get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if (task.isSuccessful()) {
+                            DocumentSnapshot document = task.getResult();
+                            if (document.exists()) {
+                                String locationInfo = document.getString("locationInfo");
+                                String locationName = document.getString("locationName");
+                                String locationPosition = document.getString("locationPosition");
+                                String data = (locationInfo + " / " + locationName + " / " + locationPosition);
+                                Toast.makeText(MainActivity.this, data, Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    }
+                });
+
+            }
+        });
+
     }
 
 
@@ -108,13 +183,16 @@ public class MainActivity extends AppCompatActivity {
     public void updateLocationInfo(Location location){
         //Log.i("Lokalizacja", location.toString());
         String Position = ("Szerokość geograficzna: " + "\n" +  location.getLatitude() + "\n" + "Długość geograficzna: " + "\n" + location.getLongitude());
-
+        String Location = "brakDanych";
         String info = "brakDanych";
         Geocoder geocoder = new Geocoder(this, Locale.getDefault());
         try {
             List<Address> addressList = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(),1);
             if(addressList != null && addressList.size() > 0) {
                 info = "informacje: \n";
+                if(addressList.get(0).getFeatureName() != null){
+                    Location = addressList.get(0).getFeatureName();
+                }
                 if(addressList.get(0).getThoroughfare() != null){
                     info += "Ulica:" + '\n' +addressList.get(0).getThoroughfare() +'\n';
                 }
@@ -132,6 +210,10 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         location_info.setText(Position + "\n" + info );
+        // getting data from edittext fields.
+        locationName = Location;
+        locationInfo = info;
+        locationPosition = Position;
     }
 
     public void startListening(){
@@ -209,4 +291,34 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+
+
+
+    private void addDataToFirestore(String locationName, String locationInfo, String locationPosition) {
+
+        // creating a collection reference
+        // for our Firebase Firetore database.
+        CollectionReference dbLocations = db.collection("Locations");
+
+        // adding our data to our Locations object class.
+        Locations Locations = new Locations(locationName, locationInfo, locationPosition);
+
+        // below method is use to add data to Firebase Firestore.
+        dbLocations.add(Locations).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+            @Override
+            public void onSuccess(DocumentReference documentReference) {
+                // after the data addition is successful
+                // we are displaying a success toast message.
+                Toast.makeText(MainActivity.this, "Your Location has been added to Firebase Firestore", Toast.LENGTH_SHORT).show();
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                // this method is called when the data addition process is failed.
+                // displaying a toast message when data addition is failed.
+                Toast.makeText(MainActivity.this, "Fail to add Location \n" + e, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
 }
+
