@@ -42,6 +42,5 @@ Allows the user to check the current weather in their city by typing the city in
 
 
 ## Authors
-
-Adam Prośniewski
-Daniel Kolesnyk
+- Adam Prośniewski
+- Daniel Kolesnyk
